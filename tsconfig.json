@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "ESNext",
+      "lib": ["es2021"],
+      "strict": true,
+      "skipLibCheck": true,
+      "outDir": "./dist",
+      "rootDir": ".",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      "types": ["@playwright/test"]
+    },
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules"]
+  }

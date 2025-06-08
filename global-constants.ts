@@ -1,0 +1,1 @@
+export const GROCERY_URL = 'https://simple-grocery-api.store/'
