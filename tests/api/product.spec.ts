@@ -1,9 +1,13 @@
-import {test, expect, request} from '@playwright/test'
-import { get } from '../../utils/apiHelper'
+import {test, expect, request, Response} from '@playwright/test'
 import { GROCERY_URL } from '../../global-constants'
+import { GROCERY } from '../../config/config'
+import { get, prettyPrint, logger } from '../../utils/apiHelper'
+import { TextContext } from '../../utils/textContext'
 
-test('Get / get the status', async ({request}) => {
-    let response = await get(request, GROCERY_URL);
+test(' Get / product of grocery', async ({request}) => {
+    logger.log('Running API.......')
+
+    let listProduct = await get(request, `${GROCERY_URL + GROCERY.product} `)
+    let user = await get( request, `${GROCERY_URL + GROCERY.productById + '1225'} `)
     
-    expect(response.message).toContain('Simple Grocery Store API.')
 })
