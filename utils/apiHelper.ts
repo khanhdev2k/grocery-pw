@@ -16,6 +16,22 @@ export async function post(request: any, endpoint: any, data: any) {
     return response.json();
 }
 
+// export async function delete( request , endpoint: any, data: any, token: any) {
+//     const response = await request.delete( endpoint , 
+//         {
+//             headers: {
+//                 { 
+//                     'Content-Type': 'application/json',
+//                     'Accept': 'application/json',
+//                     'Authorization': 
+//                 },
+//             },
+//             data: 
+//             JSON.stringify(data)
+//         }
+//     )
+// }
+
 export function prettyPrint(message: string , obj: any) {
     console.log(message, JSON.stringify(obj, null, 2));
 }
