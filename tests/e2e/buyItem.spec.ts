@@ -1,89 +1,94 @@
 import { test, expect, request } from '@playwright/test'
 import { RegisterAccount } from '../api/auth'
-import { bypassLogic, logger, prettyPrint } from '../../utils/apiHelper';
 import { USER } from '../../global-constants';
 import { TextContext } from '../../utils/textContext';
 import { ProductList } from '../api/product';
 import { ProductByID } from '../api/productById';
 import { CreateNewCart } from '../api/createNewCart';
 import { AddItemsIntoCart } from '../api/addItemIntoCart';
+import { ReplaceItem } from '../api/cartItems';
+import { logger, prettyPrint } from '../../utils/logger';
 
-test("Flow user buy one item in the grocery", async ({ request }) => {
-    let accessToken: string;
-    let listProductItem: any;
-  
-    await test.step("TC_001 - User registers successfully...", async () => {
-        const registerNewUser = new RegisterAccount();
-      
-        logger.log("Start register new user in The Grocery store");
-        const response = await registerNewUser.register(request, USER);
-        const responseBody = await response.json();
-      
-        const status = response.status();
-        // bypassLogic(status, 409, '"User already exists — skipping token assignment"')
-        if (status === 409) {
-            logger.log("User already exists — skipping token assignment");
-            return; // This only exits the current step, doesn't "skip" formally
-          }
-      
-        accessToken = responseBody.accessToken;
-        TextContext.token = accessToken;
+test("User buys one item in The Grocery Store", async ({ request }) => {
 
-        expect(status).toBe(201);
-        prettyPrint("Access Token", accessToken);
-      });
+    await test.step("Register new user", async () => {
+      const register = new RegisterAccount();
+      const response = await register.register(request, USER);
   
+      if (response.status() === 409) {
+        logger.log("User already exists — skipping token assignment");
+        return;
+      } 
+  
+      const responseBody = await response.json();
+      TextContext.token = responseBody.accessToken;
+  
+      expect(response.status()).toBe(201);
+      prettyPrint("Access Token", TextContext.token);
+    });
+  
+
     await test.step("Get all products", async () => {
       const productList = new ProductList();
-  
-      logger.log("Get the list of items in the Grocery store");
       const response = await productList.getProductList(request);
-      listProductItem = await response.json();
+      TextContext.productList = await response.json();
   
       expect(response.status()).toBe(200);
     });
   
-    await test.step("Get product details by ID", async () => {
+
+    await test.step("Select product by ID", async () => {
       const productById = new ProductByID();
+      const productId = TextContext.productList[1].id;
   
-      logger.log("Get info about a specific product by ID");
-      const productId = listProductItem[1].id;
       const response = await productById.getProductById(request, productId);
+      expect(response.status()).toBe(200);
+  
+      TextContext.prodId = productId;
+      prettyPrint("Product ID", productId);
+    });
+  
+
+    await test.step("Create new cart", async () => {
+      const createCart = new CreateNewCart();
+      const response = await createCart.create(request);
       const responseBody = await response.json();
   
-      expect(response.status()).toBe(200);
-
-      TextContext.prodId = productId;
-      prettyPrint("Product ID", TextContext.prodId);
+      expect(response.status()).toBe(201);
+      expect(responseBody.created).toBe(true);
+  
+      TextContext.cartId = responseBody.cartId;
+      prettyPrint("Cart ID", TextContext.cartId);
     });
-
-    await test.step("Create the new cart without accessToken", async ( ) => {
-        const createCart = new CreateNewCart();
-
-        logger.log('Create new cart');
-        let response = await createCart.create( request );
-        let responseBody = await response.json();
-
-        expect(response.status()).toBe(201)
-        expect(responseBody.created).toBe(true)
-        
-        TextContext.cartId = responseBody.cartId
-        prettyPrint('ResponseBody create new Cart', responseBody)
-        prettyPrint('CartId: ', TextContext.cartId)
-    })
-
-    await test.step("Add item into cart", async () => {
-        let addItemToCart = new AddItemsIntoCart();
-        let item = {
-            "productId": `${TextContext.prodId}`,
-            "quantify": 4
-        }
-
-        logger.log('Add the item and quantify into the cart')
-        let response = await addItemToCart.addItem( request, TextContext.cartId, item)
-        let responseBody = await response.json();
-
-        expect(response.status()).toBe(201)
-    })
-
-});
+  
+    // Step 5: Add item to cart
+    await test.step("Add item to cart", async () => {
+      const addItem = new AddItemsIntoCart();
+      const item = {
+        productId: TextContext.prodId,
+        quantify: 4
+      };
+  
+      const response = await addItem.addItem(request, TextContext.cartId, item);
+      expect(response.status()).toBe(201);
+  
+      const cartResponse = await addItem.getCart(request, TextContext.cartId);
+      const cartBody = await cartResponse.json();
+  
+      TextContext.itemId = cartBody.id;
+    });
+  
+    await test.step("Update item quantity in cart", async () => {
+      const replaceItem = new ReplaceItem();
+      const replaceData = {
+        productId: TextContext.prodId,
+        quantify: "10"
+      };
+  
+      const response = await replaceItem.replace(request, TextContext.cartId, TextContext.itemId, replaceData);
+      expect(response.status()).toBe(204);
+  
+      const responseBody = await response.json();
+      prettyPrint("Updated Cart Item", responseBody);
+    });
+  });

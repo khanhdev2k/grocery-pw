@@ -31,19 +31,3 @@ export async function post(request: any, endpoint: any, data: any) {
 //         }
 //     )
 // }
-
-export function prettyPrint(message: string , obj: any) {
-    console.log(message, JSON.stringify(obj, null, 2));
-}
-
-export const logger = {
-    log: (message: string) => console.log(`--- ${ new Date().toISOString()} LOG: ${message}`),
-    error: (message: string) => console.error(` ${ new Date().toISOString()} ERROR: ${message}`)
-}
-
-export function bypassLogic(value: any, expect: any, message: string) {
-    if(value === expect) {
-        logger.log(message)
-        return
-    }
-}
